@@ -20,6 +20,8 @@ import pathlib
 from rosidl_cmake import generate_files
 from rosidl_cmake import read_generator_arguments
 from rosidl_parser.definition import AbstractGenericString
+from rosidl_parser.definition import AbstractString
+from rosidl_parser.definition import AbstractWString
 from rosidl_parser.definition import AbstractNestedType
 from rosidl_parser.definition import BASIC_TYPES
 from rosidl_parser.definition import BasicType
@@ -81,12 +83,24 @@ def value_to_java(type_, value):
 
 
 def primitive_value_to_java(type_, value):
+
     assert isinstance(type_, (BasicType, AbstractGenericString)), \
         "Could not convert non-basic type '{}' to Java".format(type_)
     assert value is not None, "Value for for type '{}' must not be None".format(type_)
 
-    if isinstance(type_, AbstractGenericString):
+    if isinstance(type_, AbstractString):
         return '"%s"' % escape_string(value)
+
+    if isinstance(type_, AbstractWString):
+        modified_utf8 = []
+        for c in value:
+            if c >= '\u0001' and c <= '\u007f':
+                modified_utf8.append(c)
+            else:
+                modified_utf8.append('?')
+            # TODO(jacobperron): Encode wstring as a Java "modified UTF-8 string"
+            # https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/types.html
+        return '"%s"' % escape_wstring(''.join(modified_utf8))
 
     if type_.typename == 'boolean':
         return 'true' if value else 'false'
