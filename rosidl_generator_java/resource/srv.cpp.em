@@ -1,22 +1,57 @@
 @# Included from rosidl_generator_java/resource/idl.cpp.em
 @{
+import os
+from rosidl_cmake import expand_template
 from rosidl_generator_c import idl_structure_type_to_c_include_prefix
 
-service_includes = [
+namespaces = service.namespaced_type.namespaces
+type_name = service.namespaced_type.name
+request_type_name = service.request_message.structure.namespaced_type.name
+response_type_name = service.response_message.structure.namespaced_type.name
+
+data = {
+    'package_name': package_name,
+    'output_dir': output_dir,
+    'template_basepath': template_basepath,
+}
+
+# Generate request message
+data.update({'message': service.request_message})
+output_file = os.path.join(
+    output_dir, *namespaces[1:], '{0}.ep.{1}.cpp'.format(request_type_name, typesupport_impl))
+expand_template(
+    'msg.cpp.em',
+    data,
+    output_file)
+
+# Generate response message
+data.update({'message': service.response_message})
+output_file = os.path.join(
+    output_dir, *namespaces[1:], '{0}.ep.{1}.cpp'.format(response_type_name, typesupport_impl))
+expand_template(
+    'msg.cpp.em',
+    data,
+    output_file)
+
+jni_includes = [
+    'jni.h',
+]
+rosidl_includes = [
     'rosidl_generator_c/service_type_support_struct.h',
 ]
 }@
-@[for include in service_includes]@
-@[  if include in include_directives]@
-// already included above
-// @
-@[  else]@
-@{include_directives.add(include)}@
-@[  end if]@
+@[for include in jni_includes]@
+#include <@(include)>
+@[end for]@
+
+@[for include in rosidl_includes]@
 #include "@(include)"
 @[end for]@
 
 #include "@(idl_structure_type_to_c_include_prefix(service.namespaced_type)).h"
+
+// Ensure that a jlong is big enough to store raw pointers
+static_assert(sizeof(jlong) >= sizeof(std::intptr_t), "jlong must be able to store pointers");
 
 #ifdef __cplusplus
 extern "C" {

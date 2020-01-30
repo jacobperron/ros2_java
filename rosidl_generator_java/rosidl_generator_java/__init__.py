@@ -49,6 +49,7 @@ def generate_java(generator_arguments_file, typesupport_impls):
         mapping = {
           'idl.cpp.em': '%s.ep.{0}.cpp'.format(impl),
         }
+        additional_context.update(typesupport_impl=impl)
         generate_files(
             generator_arguments_file,
             mapping,

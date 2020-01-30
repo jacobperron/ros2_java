@@ -19,6 +19,22 @@ from rosidl_parser.definition import Array
 from rosidl_parser.definition import BasicType
 from rosidl_parser.definition import NamespacedType
 
+jni_includes = [
+    'jni.h',
+]
+std_includes = [
+    'cassert',
+    'cstdint',
+    'string',
+]
+rosidl_includes = [
+    'rosidl_generator_c/message_type_support_struct.h',
+]
+rcljava_includes = [
+    'rcljava_common/exceptions.h',
+    'rcljava_common/signatures.h',
+]
+
 msg_normalized_type = '__'.join(message.structure.namespaced_type.namespaced_name())
 msg_jni_type = '/'.join(message.structure.namespaced_type.namespaced_name())
 
@@ -35,7 +51,7 @@ array_list_jni_type = "java/util/ArrayList"
 cache = defaultdict(lambda: False)
 cache[msg_normalized_type] = msg_jni_type
 namespaced_types = set()
-includes = set()
+member_includes = set()
 for member in message.structure.members:
     type_ = member.type
     if isinstance(type_, AbstractNestedType):
@@ -43,37 +59,80 @@ for member in message.structure.members:
         cache[array_list_normalized_type] = array_list_jni_type
         type_ = type_.value_type
         if isinstance(type_, BasicType):
-            includes.add('rosidl_generator_c/primitives_sequence.h')
-            includes.add('rosidl_generator_c/primitives_sequence_functions.h')
+            member_includes.add('rosidl_generator_c/primitives_sequence.h')
+            member_includes.add('rosidl_generator_c/primitives_sequence_functions.h')
 
     # We do not cache strings because java.lang.String behaves differently
     if not isinstance(type_, AbstractGenericString):
         cache[get_normalized_type(type_)] = get_jni_type(type_)
 
     if isinstance(type_, AbstractString):
-        includes.add('rosidl_generator_c/string.h')
-        includes.add('rosidl_generator_c/string_functions.h')
+        member_includes.add('rosidl_generator_c/string.h')
+        member_includes.add('rosidl_generator_c/string_functions.h')
 
     if isinstance(type_, AbstractWString):
-        includes.add('rosidl_generator_c/u16string.h')
-        includes.add('rosidl_generator_c/u16string_functions.h')
+        member_includes.add('rosidl_generator_c/u16string.h')
+        member_includes.add('rosidl_generator_c/u16string_functions.h')
 
     if isinstance(type_, NamespacedType):
         namespaced_types.add(get_jni_type(type_))
-        # TODO(jacobperron): double-check, we may have to handle service/action suffixes (see C generator)
-        includes.add(idl_structure_type_to_c_include_prefix(type_) + '.h')
+        include_prefix = idl_structure_type_to_c_include_prefix(type_)
+        # TODO(jacobperron): Remove this logic after https://github.com/ros2/rosidl/pull/432 (Foxy)
+        # Strip off any service or action suffix
+        if include_prefix.endswith('__request'):
+            include_prefix = include_prefix[:-9]
+        elif include_prefix.endswith('__response'):
+            include_prefix = include_prefix[:-10]
+        if include_prefix.endswith('__goal'):
+            include_prefix = include_prefix[:-6]
+        elif include_prefix.endswith('__result'):
+            include_prefix = include_prefix[:-8]
+        elif include_prefix.endswith('__feedback'):
+            include_prefix = include_prefix[:-10]
+        member_includes.add(include_prefix + '.h')
 }@
-@[for include in includes]@
-@[  if include in include_directives]@
-// already included above
-// @
-@[  else]@
-@{include_directives.add(include)}@
-@[  end if]@
+@{
+# TODO(jacobperron): Remove this logic after https://github.com/ros2/rosidl/pull/432 (Foxy)
+message_c_include_prefix = idl_structure_type_to_c_include_prefix(message.structure.namespaced_type)
+# Strip off any service or action suffix
+if message_c_include_prefix.endswith('__request'):
+    message_c_include_prefix = message_c_include_prefix[:-9]
+elif message_c_include_prefix.endswith('__response'):
+    message_c_include_prefix = message_c_include_prefix[:-10]
+if message_c_include_prefix.endswith('__goal'):
+    message_c_include_prefix = message_c_include_prefix[:-6]
+elif message_c_include_prefix.endswith('__result'):
+    message_c_include_prefix = message_c_include_prefix[:-8]
+elif message_c_include_prefix.endswith('__feedback'):
+    message_c_include_prefix = message_c_include_prefix[:-10]
+}@
+
+@[for include in jni_includes]@
+#include <@(include)>
+@[end for]@
+
+@[for include in std_includes]@
+#include <@(include)>
+@[end for]@
+
+@[for include in rosidl_includes]@
 #include "@(include)"
 @[end for]@
 
-#include "@(idl_structure_type_to_c_include_prefix(message.structure.namespaced_type)).h"
+@[for include in rcljava_includes]@
+#include "@(include)"
+@[end for]@
+
+@[for include in member_includes]@
+#include "@(include)"
+@[end for]@
+
+#include "@(message_c_include_prefix).h"
+
+// Ensure that a jlong is big enough to store raw pointers
+static_assert(sizeof(jlong) >= sizeof(std::intptr_t), "jlong must be able to store pointers");
+
+using rcljava_common::exceptions::rcljava_throw_exception;
 
 #ifdef __cplusplus
 extern "C" {
