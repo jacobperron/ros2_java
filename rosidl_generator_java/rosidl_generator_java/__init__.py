@@ -20,9 +20,9 @@ import pathlib
 from rosidl_cmake import generate_files
 from rosidl_cmake import read_generator_arguments
 from rosidl_parser.definition import AbstractGenericString
+from rosidl_parser.definition import AbstractNestedType
 from rosidl_parser.definition import AbstractString
 from rosidl_parser.definition import AbstractWString
-from rosidl_parser.definition import AbstractNestedType
 from rosidl_parser.definition import BASIC_TYPES
 from rosidl_parser.definition import BasicType
 from rosidl_parser.definition import NamespacedType
