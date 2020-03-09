@@ -24,8 +24,8 @@
 #include "rmw/rmw.h"
 #include "rosidl_generator_c/message_type_support_struct.h"
 
-#include "rcljava_common/exceptions.h"
-#include "rcljava_common/signatures.h"
+#include "rcljava_common/exceptions.hpp"
+#include "rcljava_common/signatures.hpp"
 
 #include "org_ros2_rcljava_client_ClientImpl.h"
 
@@ -60,7 +60,7 @@ Java_org_ros2_rcljava_client_ClientImpl_nativeSendClientRequest(
 
   if (ret != RCL_RET_OK) {
     std::string msg =
-      "Failed to send request from a client: " + std::string(rcl_get_error_string_safe());
+      "Failed to send request from a client: " + std::string(rcl_get_error_string().str);
     rcl_reset_error();
     rcljava_throw_rclexception(env, ret, msg);
   }
@@ -91,7 +91,7 @@ Java_org_ros2_rcljava_client_ClientImpl_nativeDispose(
   rcl_ret_t ret = rcl_client_fini(client, node);
 
   if (ret != RCL_RET_OK) {
-    std::string msg = "Failed to destroy client: " + std::string(rcl_get_error_string_safe());
+    std::string msg = "Failed to destroy client: " + std::string(rcl_get_error_string().str);
     rcl_reset_error();
     rcljava_throw_rclexception(env, ret, msg);
   }
