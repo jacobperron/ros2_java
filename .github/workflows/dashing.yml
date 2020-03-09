@@ -17,4 +17,4 @@ jobs:
       with:
         package-name: rosidl_generator_java rcljava_common rcljava
         source-ros-binary-installation: dashing
-        vcs-repo-file-url: https://gist.githubusercontent.com/jacobperron/c21b5fd9a9661e5d03cb444d0565254b/raw/6216ba110746fa04017a29e5ab603c10dfdb5b4f/rcljava_dashing.repos
+        vcs-repo-file-url: https://raw.githubusercontent.com/ros2-java/ros2_java/jacob/update_desktop_repos/ros2_java_desktop.repos
