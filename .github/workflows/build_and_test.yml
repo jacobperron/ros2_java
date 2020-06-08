@@ -3,22 +3,6 @@ name: CI
 on: [push]
 
 jobs:
-  linux_build_and_test:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install Java
-      run: |
-        sudo apt update -qq
-        sudo apt install -y default-jdk
-    - uses: ros-tooling/setup-ros@3b3f060
-      with:
-        required-ros-distributions: dashing
-    - uses: ros-tooling/action-ros-ci@242ffcc
-      with:
-        package-name: rosidl_generator_java rcljava_common rcljava
-        source-ros-binary-installation: dashing
-        vcs-repo-file-url: "${{ github.workspace }}/ros2_java_desktop.repos"
   windows_build_and_test:
     runs-on: windows-latest
     steps:
@@ -31,7 +15,7 @@ jobs:
     - uses: ros-tooling/setup-ros@3b3f060
       with:
         required-ros-distributions: dashing
-    - uses: ros-tooling/action-ros-ci@242ffcc
+    - uses: jacobperron/action-ros-ci@da1e3f0
       with:
         package-name: rosidl_generator_java rcljava_common rcljava
         vcs-repo-file-url: |
