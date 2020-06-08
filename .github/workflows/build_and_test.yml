@@ -15,7 +15,7 @@ jobs:
     - uses: ros-tooling/setup-ros@3b3f060
       with:
         required-ros-distributions: dashing
-    - uses: jacobperron/action-ros-ci@da1e3f0
+    - uses: jacobperron/action-ros-ci@49adbbe
       with:
         package-name: rosidl_generator_java rcljava_common rcljava
         vcs-repo-file-url: |
