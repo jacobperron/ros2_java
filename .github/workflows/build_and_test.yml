@@ -20,4 +20,4 @@ jobs:
         package-name: rosidl_generator_java rcljava_common rcljava
         vcs-repo-file-url: |
             https://raw.githubusercontent.com/ros2/ros2/dashing/ros2.repos
-            "file://${{ github.workspace }}\ros2_java_desktop.repos"
+            file://${{ github.workspace }}\ros2_java_desktop.repos
